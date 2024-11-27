@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { TIMEOUT_MS } from "./Quiz";
 
-export default function ProgressBar() {
-  const [checkAnsRemainTime, setCheckAnsRemainTime] = useState(TIMEOUT_MS);
+export default function ProgressBar({ timeout }) {
+  const [checkAnsRemainTime, setCheckAnsRemainTime] = useState(timeout);
 
   useEffect(() => {
     const checkAnswerInterval = setInterval(() => {
@@ -14,5 +13,5 @@ export default function ProgressBar() {
     };
   }, []);
 
-  return <progress value={checkAnsRemainTime} max={TIMEOUT_MS} />;
+  return <progress value={checkAnsRemainTime} max={timeout} />;
 }
