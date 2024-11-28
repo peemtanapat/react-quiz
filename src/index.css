@@ -176,6 +176,7 @@ header h1 {
   /* background: linear-gradient(180deg, #fbda81 0%, #f8b173 100%); */
   background: #f5a76c;
   color: #2c203d;
+  /* cursor: default; */
 }
 
 .answer button.correct {
@@ -188,6 +189,11 @@ header h1 {
   /* background: linear-gradient(180deg, #f96fb1 0%, #f52b8c 100%); */
   background: #f55a98;
   color: #2c203d;
+}
+
+.answer button.disable {
+  pointer-events: none;
+  cursor: default;
 }
 
 #skip-action {

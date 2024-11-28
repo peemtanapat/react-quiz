@@ -11,34 +11,70 @@ const _ANSWER = {
   q7: "Using a the #if template syntax.",
 };
 
+function getShuffleAnswers(questionIndex) {
+  const newAnswers = [...QUESTIONS[questionIndex].answers];
+  newAnswers.sort(() => Math.random() - 0.5);
+
+  return newAnswers;
+}
+
+function checkAnswer(questionId, ans) {
+  return _ANSWER[questionId] === ans;
+}
+
 const DEFAULT_STATE = {
   userSelectAnswer: () => {},
+  userSkipAnswer: () => {},
   checkAnswer: () => {},
   toNextQuestion: () => {},
-  question: QUESTIONS[0],
+  question: {
+    ...QUESTIONS[0],
+    answers: getShuffleAnswers(0),
+  },
   questionAmount: QUESTIONS.length,
   questionIdx: 0,
   userAnswer: null,
-  result: null, // correct, wrong
+  userAction: null, // null or answered
+  result: null, // skip, correct, wrong
   userScore: 0,
+  skipCount: 0,
   history: [],
+  isCompleted: false,
 };
 export const QuizContext = createContext(DEFAULT_STATE);
 
 function quizReducer(prevState, action) {
-  if (action.type === "USER_SELECT_ANSWER") {
-    const { ans } = action.payload;
-    return { ...prevState, userAnswer: ans };
-  }
+  console.log({ action: action.type });
 
-  function checkAnswer(questionId, ans) {
-    return _ANSWER[questionId] === ans;
+  if (action.type === "USER_SELECT_ANSWER") {
+    const { questionId, ans } = action.payload;
+
+    return { ...prevState, userAction: "answered", userAnswer: ans };
   }
 
   if (action.type === "CHECK_ANSWER") {
-    const { questionId, ans } = action.payload;
-    const result = checkAnswer(questionId, ans) ? "correct" : "wrong";
+    // const { questionId, ans } = action.payload;
     const prevHistory = prevState.history;
+
+    if (!prevState.userAnswer) {
+      const result = "skip";
+      const newHistory = {
+        question: prevState.question,
+        userAnswer: prevState.userAnswer,
+        result,
+      };
+
+      return {
+        ...prevState,
+        result: "skip",
+        skipCount: prevState.skipCount + 1,
+        history: [...prevHistory, newHistory],
+      };
+    }
+
+    const result = checkAnswer(prevState.question.id, prevState.userAnswer)
+      ? "correct"
+      : "wrong";
     const newHistory = {
       question: prevState.question,
       userAnswer: prevState.userAnswer,
@@ -55,12 +91,22 @@ function quizReducer(prevState, action) {
 
   if (action.type === "TO_NEXT_QUESTION") {
     const prevIdx = prevState.questionIdx;
+    const newIdx = prevIdx + 1;
+    const quizCompleted = newIdx == prevState.questionAmount;
+
+    if (quizCompleted) {
+      return { ...prevState, isCompleted: true };
+    }
+
+    const newQuestion = QUESTIONS[newIdx];
+    const newAnswers = getShuffleAnswers(prevIdx + 1);
 
     return {
       ...prevState,
       questionIdx: prevIdx + 1,
-      question: QUESTIONS[prevIdx + 1],
+      question: { ...newQuestion, answers: newAnswers },
       result: null,
+      userAction: null,
       userAnswer: null,
     };
   }
@@ -69,10 +115,11 @@ function quizReducer(prevState, action) {
 export default function QuizContextProvider({ children }) {
   const [quizState, quizDispatch] = useReducer(quizReducer, DEFAULT_STATE);
 
-  function handleUserSelectAnswer(ans) {
+  function handleUserSelectAnswer(questionId, ans) {
     quizDispatch({
       type: "USER_SELECT_ANSWER",
       payload: {
+        questionId,
         ans,
       },
     });
@@ -98,6 +145,7 @@ export default function QuizContextProvider({ children }) {
   const ctxValue = {
     ...quizState,
     userSelectAnswer: handleUserSelectAnswer,
+    // userSkipAnswer: handleUserSkipAnswer,
     checkAnswer: handleCheckAnswer,
     toNextQuestion: handleToNextQuestion,
   };

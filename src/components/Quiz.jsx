@@ -1,9 +1,10 @@
-import { useContext } from "react";
-import ProgressBar from "./ProgressBar";
+import { useCallback, useContext, useRef } from "react";
+import QuestionTimerBar from "./QuestionTimerBar";
 import Summary from "./Summary";
 import { QuizContext } from "../stores/quiz-context";
 import AnswerList from "./AnswerList";
 
+export const WAITING_TIME = 2500;
 export const CHECK_ANS_TIME_MS = 750;
 export const CHANGE_QUESTION_TIME_MS = 1500;
 
@@ -11,39 +12,44 @@ export default function Quiz() {
   // effect after select answer orange ---750ms--> 'red' or 'green'
   // effect after result red/green ---1500ms--> to next question
   const quizState = useContext(QuizContext);
+  const timerRef = useRef();
 
-  function handleSelectAnswer(questionId, ans) {
-    quizState.userSelectAnswer(ans);
+  const handleUserSelectAnswer = useCallback((questionId, ans) => {
+    quizState.userSelectAnswer(questionId, ans);
+    quizState.checkAnswer(quizState.question.id, quizState.userAnswer);
+    quizState.toNextQuestion();
+  }, []);
 
-    setTimeout(() => {
-      quizState.checkAnswer(questionId, ans);
+  const handleUserSkipAnswer = useCallback(() => {
+    quizState.userSelectAnswer(quizState.question.id, null);
+    quizState.checkAnswer(quizState.question.id, quizState.userAnswer);
+    quizState.toNextQuestion();
+  }, [handleUserSelectAnswer]);
 
-      setTimeout(() => {
-        quizState.toNextQuestion();
-      }, CHANGE_QUESTION_TIME_MS);
-    }, CHECK_ANS_TIME_MS);
-  }
-
-  const answerIsSelected = quizState.userAnswer && !quizState.result;
+  const answerIsWaiting = !quizState.userAction;
+  const answerIsSelectedOrSkipped = quizState.userAction && !quizState.result;
   const answerIsChecked = !!quizState.result;
+
+  if (quizState.isCompleted) {
+    return <Summary />;
+  }
 
   return (
     <div id="quiz">
-      {quizState.questionIdx < quizState.questionAmount && (
-        <div id="question-overview">
-          <div id="question" key={quizState.questionIdx}>
-            <h2>{quizState.question.text}</h2>
+      <QuestionTimerBar
+        key={quizState.question.id}
+        onTimeout={handleUserSkipAnswer}
+        timeout={WAITING_TIME}
+        ref={timerRef}
+      />
 
-            <AnswerList onSelectAnswer={handleSelectAnswer} />
+      <div id="question-overview">
+        <div id="question" key={quizState.questionIdx}>
+          <h2>{quizState.question.text}</h2>
 
-            {answerIsSelected && <ProgressBar timeout={CHECK_ANS_TIME_MS} />}
-            {answerIsChecked && (
-              <ProgressBar timeout={CHANGE_QUESTION_TIME_MS} />
-            )}
-          </div>
+          <AnswerList onSelectAnswer={handleUserSelectAnswer} />
         </div>
-      )}
-      {quizState.questionIdx === quizState.questionAmount && <Summary />}
+      </div>
     </div>
   );
 }

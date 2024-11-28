@@ -4,6 +4,8 @@ import { QuizContext } from "../stores/quiz-context";
 export default function AnswerList({ onSelectAnswer }) {
   const quizState = useContext(QuizContext);
 
+  const shuffleAnswers = quizState.question.answers;
+
   function getAnswerClassName(_ans) {
     const { result, userAnswer } = quizState;
     // not selected any choice
@@ -14,28 +16,27 @@ export default function AnswerList({ onSelectAnswer }) {
     const isSelectedAns = userAnswer === _ans;
 
     if (isSelectedAns && result === "correct") {
-      return "correct";
+      return "correct disable";
     }
-
     if (isSelectedAns && result === "wrong") {
-      return "wrong";
+      return "wrong disable";
     }
-
     if (isSelectedAns) {
-      return "selected";
+      return "selected disable";
     }
 
-    return "";
+    return "disable";
   }
 
   return (
     <ul id="answers">
-      {quizState.question.answers.map((ans, idx) => {
+      {shuffleAnswers.map((ans) => {
         return (
-          <li key={idx} className="answer">
+          <li key={ans} className="answer">
             <button
               className={getAnswerClassName(ans)}
               onClick={() => onSelectAnswer(quizState.question.id, ans)}
+              // disabled={!!quizState.userAnswer}
             >
               {ans}
             </button>
