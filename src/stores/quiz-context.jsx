@@ -11,13 +11,6 @@ const _ANSWER = {
   q7: "Using a the #if template syntax.",
 };
 
-function getShuffleAnswers(questionIndex) {
-  const newAnswers = [...QUESTIONS[questionIndex].answers];
-  newAnswers.sort(() => Math.random() - 0.5);
-
-  return newAnswers;
-}
-
 function checkAnswer(questionId, ans) {
   return _ANSWER[questionId] === ans;
 }
@@ -27,10 +20,7 @@ const DEFAULT_STATE = {
   userSkipAnswer: () => {},
   checkAnswer: () => {},
   toNextQuestion: () => {},
-  question: {
-    ...QUESTIONS[0],
-    answers: getShuffleAnswers(0),
-  },
+  question: QUESTIONS[0],
   questionAmount: QUESTIONS.length,
   questionIdx: 0,
   userAnswer: null,
@@ -44,16 +34,13 @@ const DEFAULT_STATE = {
 export const QuizContext = createContext(DEFAULT_STATE);
 
 function quizReducer(prevState, action) {
-  console.log({ action: action.type });
-
   if (action.type === "USER_SELECT_ANSWER") {
-    const { questionId, ans } = action.payload;
+    const { ans } = action.payload;
 
     return { ...prevState, userAction: "answered", userAnswer: ans };
   }
 
   if (action.type === "CHECK_ANSWER") {
-    // const { questionId, ans } = action.payload;
     const prevHistory = prevState.history;
 
     if (!prevState.userAnswer) {
@@ -85,6 +72,7 @@ function quizReducer(prevState, action) {
       ...prevState,
       result,
       userScore: prevState.userScore + (result === "correct" ? 1 : 0),
+      userAction: "wait",
       history: [...prevHistory, newHistory],
     };
   }
@@ -99,12 +87,11 @@ function quizReducer(prevState, action) {
     }
 
     const newQuestion = QUESTIONS[newIdx];
-    const newAnswers = getShuffleAnswers(prevIdx + 1);
 
     return {
       ...prevState,
       questionIdx: prevIdx + 1,
-      question: { ...newQuestion, answers: newAnswers },
+      question: newQuestion,
       result: null,
       userAction: null,
       userAnswer: null,
@@ -145,7 +132,6 @@ export default function QuizContextProvider({ children }) {
   const ctxValue = {
     ...quizState,
     userSelectAnswer: handleUserSelectAnswer,
-    // userSkipAnswer: handleUserSkipAnswer,
     checkAnswer: handleCheckAnswer,
     toNextQuestion: handleToNextQuestion,
   };

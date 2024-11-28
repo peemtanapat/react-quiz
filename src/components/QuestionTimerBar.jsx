@@ -1,14 +1,9 @@
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
-const QuestionTimerBar = forwardRef(function QuestionTimerBar(
-  { onTimeout, timeout, clearPrevious = false },
-  ref
-) {
+function QuestionTimerBar({ onTimeout, timeout, mode }) {
   const [checkAnsRemainTime, setCheckAnsRemainTime] = useState(timeout);
 
   useEffect(() => {
-    console.log("SET_TIMEOUT " + onTimeout);
-
     const timeoutRef = setTimeout(onTimeout, timeout);
 
     return () => {
@@ -17,8 +12,6 @@ const QuestionTimerBar = forwardRef(function QuestionTimerBar(
   }, [onTimeout, timeout]);
 
   useEffect(() => {
-    console.log("SET_INTERVAL " + onTimeout);
-
     const intervalRef = setInterval(() => {
       setCheckAnsRemainTime((prevTime) => prevTime - 10);
     }, 10);
@@ -28,7 +21,7 @@ const QuestionTimerBar = forwardRef(function QuestionTimerBar(
     };
   }, []);
 
-  return <progress value={checkAnsRemainTime} max={timeout} />;
-});
+  return <progress className={mode} value={checkAnsRemainTime} max={timeout} />;
+}
 
 export default QuestionTimerBar;

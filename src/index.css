@@ -119,6 +119,10 @@ header h1 {
   background: #f8e59c;
 }
 
+#question progress.wait {
+  background: lightblue;
+}
+
 #question progress.answered::-webkit-progress-value {
   background: #f8e59c;
 }

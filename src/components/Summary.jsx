@@ -16,11 +16,9 @@ export default function Summary() {
   function getIncorrectPercentage() {
     return (
       (100 / quizState.questionAmount) *
-      (quizState.questionAmount - quizState.userScore)
+      (quizState.questionAmount - quizState.userScore - quizState.skipCount)
     ).toFixed(0);
   }
-
-  console.log({ history: quizState.history });
 
   return (
     <div id="summary">
@@ -42,7 +40,6 @@ export default function Summary() {
       </div>
       <ol>
         {quizState.history.map((item, index) => {
-          console.log({ item });
           return (
             <li key={index}>
               <h3>{index + 1}</h3>

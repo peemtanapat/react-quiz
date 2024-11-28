@@ -1,27 +1,33 @@
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import { QuizContext } from "../stores/quiz-context";
+import QUESTIONS from "../questions";
 
 export default function AnswerList({ onSelectAnswer }) {
   const quizState = useContext(QuizContext);
 
-  const shuffleAnswers = quizState.question.answers;
+  const shuffleAnswers = useRef();
+
+  if (!shuffleAnswers.current) {
+    shuffleAnswers.current = [...QUESTIONS[quizState.questionIdx].answers];
+    shuffleAnswers.current.sort(() => Math.random() - 0.5);
+  }
 
   function getAnswerClassName(_ans) {
-    const { result, userAnswer } = quizState;
+    const { result, userAction, userAnswer } = quizState;
     // not selected any choice
-    if (!userAnswer) {
+    if (!userAction) {
       return "";
     }
-    // selected a choice
-    const isSelectedAns = userAnswer === _ans;
 
-    if (isSelectedAns && result === "correct") {
+    const isMatchedAnswer = userAnswer === _ans;
+
+    if (isMatchedAnswer && result === "correct") {
       return "correct disable";
     }
-    if (isSelectedAns && result === "wrong") {
+    if (isMatchedAnswer && result === "wrong") {
       return "wrong disable";
     }
-    if (isSelectedAns) {
+    if (isMatchedAnswer) {
       return "selected disable";
     }
 
@@ -30,13 +36,13 @@ export default function AnswerList({ onSelectAnswer }) {
 
   return (
     <ul id="answers">
-      {shuffleAnswers.map((ans) => {
+      {shuffleAnswers.current.map((ans) => {
         return (
           <li key={ans} className="answer">
             <button
               className={getAnswerClassName(ans)}
               onClick={() => onSelectAnswer(quizState.question.id, ans)}
-              // disabled={!!quizState.userAnswer}
+              disabled={!!quizState.userAction}
             >
               {ans}
             </button>
